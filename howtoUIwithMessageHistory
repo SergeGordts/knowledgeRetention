@@ -1,0 +1,134 @@
+When a chatbot interacts with a language model, such as GPT, Mistral, or any other foundation model, the prompt transfer and handling of message history are key aspects that ensure the chatbot can maintain coherent conversations over time. Here’s a breakdown of how this typically works:
+1. Transferring the Prompt to the Model
+
+The chatbot sends user inputs (prompts) to the model in the form of structured text or tokens, depending on the underlying system. Here's how the process generally works:
+Step-by-Step Flow:
+
+    User Input: The user sends a message to the chatbot interface (e.g., "How do I restart the server?").
+
+    Pre-processing (Tokenization): The chatbot takes the user’s message and pre-processes it. Pre-processing may include:
+        Tokenizing the input (breaking it into smaller units, like words or subwords).
+        Adding special tokens (such as start/end tokens) to indicate the beginning and end of the prompt.
+        Cleaning the input if needed (e.g., removing unnecessary characters).
+
+    Model Input: The pre-processed prompt is then passed to the language model's API or system for generating a response. This can either be:
+        API Call (for cloud-based models): The chatbot sends the prompt via an API to a model hosted on a remote server (e.g., OpenAI's GPT-3).
+        Local Model Call (for self-hosted models): The chatbot sends the prompt directly to a locally running model like GPT-Neo or Mistral.
+
+    Response Generation: The model processes the prompt and generates a response, typically as a continuation of the input or by answering a specific question.
+
+    For example:
+        User input: "How do I restart the server?"
+        Model output: "To restart the server, you can run the following command: sudo reboot."
+
+2. Handling Message History
+
+To maintain context across multiple messages, the chatbot needs to send not only the latest user input but also relevant portions of the previous conversation. This is essential to simulate coherent, context-aware interactions. There are two common ways of handling message history:
+A. Concatenation of Previous Messages
+
+The most common method is to concatenate the message history (conversation) and send it as part of a single prompt to the model.
+
+    Message History Storage: Each message, both from the user and the chatbot (or model), is stored in chronological order.
+
+    Context Window: When the user sends a new message, the chatbot concatenates the recent messages from the conversation history and includes them in the prompt. This gives the model the necessary context for generating a coherent response.
+        Example:
+            User 1st message: "How do I restart the server?"
+            Bot response: "To restart the server, run sudo reboot."
+            User 2nd message: "What if that doesn't work?"
+        The chatbot would pass the following prompt to the model:
+
+        plaintext
+
+        User: How do I restart the server?
+        Bot: To restart the server, run `sudo reboot`.
+        User: What if that doesn't work?
+
+        The model would generate a response in the context of the prior conversation.
+
+    Limitation: Language models have a fixed context window (e.g., GPT-3 has a limit of ~4,096 tokens for smaller versions, while models like GPT-4 and GPT-NeoX have larger limits). If the conversation becomes too long, older messages may need to be truncated or summarized to fit within the context window.
+
+B. Memory Management Techniques
+
+Some systems go beyond simple concatenation by implementing memory management techniques to handle message history more effectively. These techniques can improve the chatbot’s ability to recall past interactions while managing limited token windows.
+
+    Summarization: The chatbot summarizes previous messages when the conversation exceeds the model’s token limit. Instead of keeping every word, key points from the past conversation are stored and sent to the model as part of the context. For example:
+        Original history: "We discussed server restart options, and you suggested sudo reboot."
+        Summarized history: "Server restart options discussed."
+
+    Selective Memory: The chatbot keeps only the most important parts of the conversation (like specific questions, decisions, or critical information) in memory. It might skip or truncate less relevant small talk to preserve the more important context.
+
+    External Memory Systems: Some advanced chatbots store conversation history in a long-term memory database outside the model. This allows the bot to recall past interactions from multiple sessions, which can be retrieved when necessary but doesn’t impact the model’s immediate token limit.
+
+C. Using Special Tokens for Role Separation
+
+Many models use special tokens to separate messages from the user and the bot, ensuring the model understands the dialogue flow.
+
+For example:
+
+    "<|User|>": Denotes the user's input.
+    "<|Bot|>": Denotes the chatbot's response.
+    "<|EndOfConversation|>": Marks the end of a conversation or session.
+
+This format helps the model distinguish between various parts of the conversation, even in complex or long exchanges.
+3. Maintaining Coherence Across Sessions
+
+In some cases, you may want the chatbot to "remember" details across multiple sessions with the same user. Here’s how this can be handled:
+
+    Session Management: When users return to the chatbot in future sessions, the bot retrieves relevant information from a stored user profile or session log to maintain continuity. For example, if the user previously discussed server issues, the bot might bring up the relevant context in a future session.
+    Long-Term Memory Databases: Instead of sending all previous messages to the model in every session, the chatbot can store certain key information (e.g., system configurations, preferences) in an external database. This information is fetched and included as part of the prompt when necessary.
+
+4. Generating Responses
+
+Once the message history and current input are passed to the model, it generates a response. The chatbot then:
+
+    Post-processes the Response: Adjusts formatting, adds any necessary metadata, or applies constraints (e.g., length limits or specific terminology based on business rules).
+    Sends the Response to the User: The final response is sent back to the user through the chat interface, maintaining the conversational flow.
+
+5. Continuous Learning (Optional)
+
+For models designed to learn from user interaction, you might include a feedback loop:
+
+    After generating a response, the system could store user feedback (e.g., was the response helpful?) and use this to fine-tune the model later or update the memory systems.
+
+Example Implementation Flow:
+
+    User sends input: "How do I restart the server?"
+    Chatbot handles input:
+        Pre-processes and tokenizes the user’s input.
+        Combines the input with previous message history:
+
+        plaintext
+
+    User: How do I restart the server?
+
+Chatbot sends the prompt to the model (via API or locally):
+
+plaintext
+
+User: How do I restart the server?
+
+Model processes the prompt and generates a response:
+
+plaintext
+
+Bot: To restart the server, run `sudo reboot`.
+
+Chatbot sends the response to the user.
+User asks a follow-up question: "What if that doesn't work?"
+Chatbot updates message history and sends the full conversation to the model:
+
+plaintext
+
+User: How do I restart the server?
+Bot: To restart the server, run `sudo reboot`.
+User: What if that doesn't work?
+
+Model generates a context-aware response:
+
+plaintext
+
+    Bot: If `sudo reboot` doesn’t work, you can try restarting specific services using `systemctl restart <service>`.
+
+    Chatbot delivers the response to the user.
+
+By managing prompts, handling conversation history, and using effective memory techniques, you can ensure that the chatbot interacts naturally and maintains coherence over time, even in complex interactions.
